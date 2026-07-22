@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1410">
+<title>アプリ道梁山泊</title>
+<link rel="apple-touch-icon" href="./icon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#1a1410;--surface:#251e17;--surface2:#2f261d;--border:#3d3120;
+  --gold:#c9a96e;--gold-light:#e8c98a;--text:#f0e8d8;--text-sub:#8a7a65;
+  --red:#e05c4a;--green:#5ab88a;--radius:16px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,'Hiragino Sans',sans-serif}
+body{display:flex;flex-direction:column;min-height:100vh}
+.header{padding:20px 20px 0;display:flex;align-items:center;gap:10px}
+.header-logo{width:36px;height:36px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.header-title{font-size:17px;font-weight:800;color:var(--gold);letter-spacing:.5px}
+.main{flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;max-width:480px;width:100%;margin:0 auto}
+.phase{display:none;flex-direction:column;gap:16px;animation:fadeIn .25s ease}
+.phase.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 20px;text-align:center}
+.hero-kanji{font-size:64px;color:var(--gold);line-height:1;margin-bottom:12px;font-weight:900;letter-spacing:-2px}
+.hero-title{font-size:20px;font-weight:800;margin-bottom:8px}
+.hero-sub{font-size:13px;color:var(--text-sub);line-height:1.7}
+.steps{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.steps-title{font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;margin-bottom:12px}
+.step{display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.step:last-child{border-bottom:none;padding-bottom:0}
+.step-num{width:24px;height:24px;background:var(--gold);color:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px}
+.step-text{font-size:13px;line-height:1.6;color:var(--text)}
+.field{display:flex;flex-direction:column;gap:8px}
+.field-label{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.5px;display:flex;align-items:center;gap:6px}
+.field-label .badge{font-size:10px;background:var(--surface2);color:var(--text-sub);padding:2px 6px;border-radius:4px;font-weight:400}
+.field-input{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:border-color .2s;resize:none;line-height:1.5;width:100%}
+.field-input:focus{border-color:var(--gold)}
+.field-input::placeholder{color:var(--text-sub)}
+textarea.field-input{height:200px;font-size:13px}
+
+/* ===== アイコンアップロード（修正版） ===== */
+.icon-upload-wrap{position:relative;background:var(--surface);border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;overflow:hidden;min-height:100px}
+.icon-upload-wrap:hover,.icon-upload-wrap.drag{border-color:var(--gold)}
+.icon-upload-wrap input[type=file]{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:10;font-size:0}
+.icon-preview-img{width:72px;height:72px;border-radius:16px;object-fit:cover;margin:0 auto 8px;display:block}
+.icon-placeholder-emoji{font-size:36px;margin-bottom:8px}
+.icon-placeholder-text{font-size:12px;color:var(--text-sub);line-height:1.6}
+
+.btn{width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.3px}
+.btn:active{opacity:.85;transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--bg)}
+.btn-ghost{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.loading-wrap{text-align:center;padding:40px 20px}
+.loading-icon{font-size:56px;animation:spin 2s linear infinite;display:block;margin:0 auto 20px}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.loading-title{font-size:18px;font-weight:800;margin-bottom:8px;color:var(--gold)}
+.loading-steps{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.loading-step{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-radius:10px;font-size:13px;transition:opacity .3s}
+.loading-step.done{color:var(--green)}
+.loading-step.active{color:var(--gold)}
+.loading-step.wait{opacity:.35}
+.loading-step-icon{width:20px;text-align:center;flex-shrink:0}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.result-header{padding:20px;border-bottom:1px solid var(--border)}
+.result-badge{display:inline-block;font-size:10px;font-weight:700;background:var(--green);color:#fff;padding:3px 8px;border-radius:6px;margin-bottom:10px;letter-spacing:.5px}
+.result-name{font-size:20px;font-weight:800;margin-bottom:4px}
+.result-repo{font-size:12px;color:var(--text-sub)}
+.result-url{padding:16px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.result-url-text{flex:1;font-size:13px;color:var(--gold);word-break:break-all;line-height:1.4}
+.result-copy-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;white-space:nowrap}
+.result-copy-btn.copied{background:var(--green);border-color:var(--green);color:#fff}
+.result-actions{padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+.result-open-btn{display:block;width:100%;padding:14px;background:var(--gold);color:var(--bg);border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none}
+.result-open-btn:active{opacity:.85}
+.result-note{padding:12px 20px;background:var(--bg);border-top:1px solid var(--border)}
+.result-note p{font-size:11px;color:var(--text-sub);line-height:1.7}
+.error-card{background:var(--surface);border:1px solid var(--red);border-radius:var(--radius);padding:24px;text-align:center}
+.error-icon{font-size:40px;margin-bottom:12px}
+.error-title{font-size:16px;font-weight:800;color:var(--red);margin-bottom:8px}
+.error-msg{font-size:13px;color:var(--text-sub);line-height:1.6;margin-bottom:16px}
+.section-title{font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;padding:0 2px}
+
+/* ===== URL貼り付けモード ===== */
+.redo-mode-banner{background:var(--surface2);border:1px solid var(--gold);border-radius:12px;padding:12px 16px;font-size:12px;color:var(--gold);display:flex;align-items:center;gap:8px}
+.redo-mode-banner .redo-repo{font-weight:700;word-break:break-all}
+.redo-clear-btn{margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-sub);padding:4px 10px;border-radius:6px;font-size:11px;font-family:inherit;cursor:pointer;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">梁</div>
+  <div class="header-title">アプリ道梁山泊</div>
+</div>
+
+<div class="main">
+
+  <!-- ウェルカム -->
+  <div class="phase active" id="phase-welcome">
+    <div class="hero">
+      <div class="hero-kanji">梁山泊</div>
+      <div class="hero-title">コードを貼るだけで<br>Webアプリが公開される</div>
+      <div class="hero-sub">Claudeで作ったHTMLを貼り付けると<br>Cloudflareに自動でデプロイして<br>URLをお渡しします</div>
+    </div>
+    <div class="steps">
+      <div class="steps-title">つかいかた</div>
+      <div class="step"><div class="step-num">1</div><div class="step-text">ClaudeでHTMLアプリを作る</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text">コードをコピーしてここに貼る</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text">URLが発行されて完成！</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="goInput(false)">📋 新しいアプリを作る</button>
+    <button class="btn btn-ghost" onclick="goRedoMode()">🔄 既存アプリを作り直す</button>
+  </div>
+
+  <!-- インプット -->
+  <div class="phase" id="phase-input">
+    <!-- 作り直しモードバナー -->
+    <div class="redo-mode-banner" id="redo-banner" style="display:none">
+      🔄 作り直しモード：<span class="redo-repo" id="redo-repo-name"></span>
+      <button class="redo-clear-btn" onclick="clearRedoMode()">解除</button>
+    </div>
+
+    <div class="section-title">STEP 1 — アプリの情報</div>
+    <div class="field">
+      <div class="field-label">アプリ名 <span class="badge">省略可</span></div>
+      <input class="field-input" id="input-appname" type="text" placeholder="例：家族の予定管理（空欄なら自動）" maxlength="40">
+    </div>
+
+    <div class="section-title">STEP 2 — HTMLコード</div>
+    <div class="field">
+      <div class="field-label">HTMLファイルを選ぶ <span class="badge">推奨</span></div>
+      <input type="file" accept=".html,text/html" id="html-file-input" onchange="onHtmlFileSelect(event)" style="display:none">
+      <button type="button" class="btn btn-ghost" onclick="document.getElementById('html-file-input').click()" id="html-file-btn">📄 .htmlファイルを選ぶ</button>
+    </div>
+    <div class="field">
+      <div class="field-label">または直接貼り付け <span class="badge">省略可</span></div>
+      <textarea class="field-input" id="input-html" placeholder="<!DOCTYPE html>&#10;<html>&#10;  ...&#10;</html>"></textarea>
+    </div>
+
+    <div class="section-title">STEP 3 — アイコン</div>
+    <!-- アイコンアップロード：div+onclick方式（Safari対応） -->
+    <input type="file" accept="image/*" id="icon-file-input" onchange="onIconSelect(event)" style="display:none">
+    <div class="icon-upload-wrap" id="icon-upload-wrap" onclick="document.getElementById('icon-file-input').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <div id="icon-preview-wrap" style="display:none">
+        <img class="icon-preview-img" id="icon-preview">
+        <div class="icon-placeholder-text" style="color:var(--green)">✅ アイコン設定済み（タップで変更）</div>
+      </div>
+      <div id="icon-placeholder-wrap">
+        <div class="icon-placeholder-emoji">🖼️</div>
+        <div class="icon-placeholder-text">タップして画像を選ぶ<br>なければ自動でアイコンを作ります</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="startDeploy()">🚀 デプロイする</button>
+    <button class="btn btn-ghost" onclick="goPhase('welcome')">← もどる</button>
+  </div>
+
+  <!-- ローディング -->
+  <div class="phase" id="phase-loading">
+    <div class="loading-wrap">
+      <span class="loading-icon">⚙️</span>
+      <div class="loading-title">デプロイ中…</div>
+      <div style="font-size:13px;color:var(--text-sub)">しばらくお待ちください</div>
+      <div class="loading-steps">
+        <div class="loading-step wait" id="ls-repo"><div class="loading-step-icon">📦</div>アップロード先を準備中</div>
+        <div class="loading-step wait" id="ls-html"><div class="loading-step-icon">📄</div>index.htmlを送信中</div>
+        <div class="loading-step wait" id="ls-sw"><div class="loading-step-icon">🔄</div>自動更新SWを送信中</div>
+        <div class="loading-step wait" id="ls-icon"><div class="loading-step-icon">🎨</div>アイコンを送信中</div>
+        <div class="loading-step wait" id="ls-pages"><div class="loading-step-icon">🌐</div>公開設定を有効化中</div>
+        <div class="loading-step wait" id="ls-url"><div class="loading-step-icon">✅</div>URLを発行中</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 結果 -->
+  <div class="phase" id="phase-result">
+    <div class="result-card">
+      <div class="result-header">
+        <div class="result-badge" id="result-badge">✅ デプロイ完了</div>
+        <div class="result-name" id="result-name">アプリ名</div>
+        <div class="result-repo" id="result-repo">公開先</div>
+      </div>
+      <div class="result-url">
+        <div class="result-url-text" id="result-url-text">https://...</div>
+        <button class="result-copy-btn" id="copy-btn" onclick="copyUrl()">コピー</button>
+      </div>
+      <div class="result-actions">
+        <a class="result-open-btn" id="result-open-btn" href="#" target="_blank">🌐 アプリを開く</a>
+        <button class="btn btn-ghost" onclick="goRedo()">🔄 作り直す（同じURLに上書き）</button>
+        <button class="btn btn-ghost" onclick="goNew()">✨ 新しいアプリを作る</button>
+      </div>
+      <div class="result-note">
+        <p>✅ 数秒〜数十秒でURLが有効になります。<br>✅ 作り直した時はユーザーのアプリも次回起動時に自動更新されます。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- エラー -->
+  <div class="phase" id="phase-error">
+    <div class="error-card">
+      <div class="error-icon">⚠️</div>
+      <div class="error-title" id="error-title">エラーが発生しました</div>
+      <div class="error-msg" id="error-msg">もう一度試してみてください。</div>
+      <button class="btn btn-primary" onclick="goPhase('input')">← 入力に戻る</button>
+    </div>
+  </div>
+
+  <!-- URL貼り付けモード入力 -->
+  <div class="phase" id="phase-redo-url">
+    <div class="section-title">作り直したいアプリのURLを貼り付け</div>
+    <div class="field">
+      <div class="field-label">公開URL</div>
+      <input class="field-input" id="input-redo-url" type="url"
+        placeholder="https://app-name-xxxx.mugikoha-one.workers.dev/">
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);line-height:1.7">
+      結果画面でコピーしたURLをそのまま貼ってください。<br>
+      同じアプリに上書きデプロイされます。
+    </div>
+    <button class="btn btn-primary" onclick="confirmRedoUrl()">✅ このアプリを作り直す</button>
+    <button class="btn btn-ghost" onclick="goPhase('welcome')">← もどる</button>
+  </div>
+
+</div>
+
+<script>
+const WORKER_URL = 'https://dojo-api.mugikoha-one.workers.dev';
+
+var currentPhase = 'welcome';
+var iconBase64 = null;
+var currentRepoName = null;
+
+function goPhase(phase) {
+  document.querySelectorAll('.phase').forEach(el => el.classList.remove('active'));
+  document.getElementById('phase-' + phase).classList.add('active');
+  currentPhase = phase;
+  window.scrollTo(0, 0);
+}
+
+function goInput(isRedo) {
+  document.getElementById('redo-banner').style.display = isRedo ? 'flex' : 'none';
+  goPhase('input');
+}
+
+// ===== 作り直しモード（URL入力） =====
+function goRedoMode() {
+  document.getElementById('input-redo-url').value = '';
+  goPhase('redo-url');
+}
+
+function confirmRedoUrl() {
+  const urlVal = document.getElementById('input-redo-url').value.trim();
+  // https://xxxx.mugikoha-one.workers.dev/ からscriptNameを抽出
+  const m = urlVal.match(/https?:\/\/([^.]+)\.mugikoha-one\.workers\.dev/);
+  if (!m) {
+    alert('URLの形式が正しくありません。\nhttps://アプリ名.mugikoha-one.workers.dev/ の形で貼ってください。');
+    return;
+  }
+  currentRepoName = m[1];
+  document.getElementById('redo-repo-name').textContent = currentRepoName;
+  document.getElementById('redo-banner').style.display = 'flex';
+  document.getElementById('input-html').value = '';
+  goPhase('input');
+}
+
+function clearRedoMode() {
+  currentRepoName = null;
+  document.getElementById('redo-banner').style.display = 'none';
+}
+
+function goRedo() {
+  document.getElementById('redo-repo-name').textContent = currentRepoName || '';
+  document.getElementById('redo-banner').style.display = currentRepoName ? 'flex' : 'none';
+  document.getElementById('input-html').value = '';
+  goPhase('input');
+}
+
+function goNew() {
+  currentRepoName = null;
+  iconBase64 = null;
+  document.getElementById('input-appname').value = '';
+  document.getElementById('input-html').value = '';
+  resetIconPreview();
+  goPhase('welcome');
+}
+
+
+// ===== HTMLファイル読み込み =====
+function onHtmlFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const btn = document.getElementById('html-file-btn');
+  btn.textContent = '⏳ 読み込み中…';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('input-html').value = e.target.result;
+    btn.textContent = '✅ ' + file.name + '（タップで変更）';
+  };
+  reader.onerror = function() {
+    btn.textContent = '⚠️ 読み込み失敗、もう一度お試しください';
+    setTimeout(() => { btn.textContent = '📄 .htmlファイルを選ぶ'; }, 2000);
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+// ===== アイコン選択（label方式で修正） =====
+function onIconSelect(event) {
+  const file = event.target.files[0];
+  if (file) loadIconFile(file);
+}
+
+function onDragOver(event) {
+  event.preventDefault();
+  document.getElementById('icon-upload-wrap').classList.add('drag');
+}
+
+function onDragLeave(event) {
+  document.getElementById('icon-upload-wrap').classList.remove('drag');
+}
+
+function onDrop(event) {
+  event.preventDefault();
+  document.getElementById('icon-upload-wrap').classList.remove('drag');
+  const file = event.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) loadIconFile(file);
+}
+
+function loadIconFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    iconBase64 = e.target.result.split(',')[1];
+    document.getElementById('icon-preview').src = e.target.result;
+    document.getElementById('icon-preview-wrap').style.display = 'block';
+    document.getElementById('icon-placeholder-wrap').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetIconPreview() {
+  iconBase64 = null;
+  document.getElementById('icon-preview-wrap').style.display = 'none';
+  document.getElementById('icon-placeholder-wrap').style.display = 'block';
+  document.getElementById('icon-file-input').value = '';
+}
+
+// ===== ローディングアニメーション =====
+function setLoadingStep(stepId, state) {
+  const el = document.getElementById(stepId);
+  if (!el) return;
+  el.classList.remove('active', 'done', 'wait');
+  el.classList.add(state);
+  if (state === 'done') el.querySelector('.loading-step-icon').textContent = '✅';
+}
+
+function startLoadingAnimation() {
+  const steps = ['ls-repo', 'ls-html', 'ls-sw', 'ls-icon', 'ls-pages', 'ls-url'];
+  steps.forEach(s => setLoadingStep(s, 'wait'));
+  const delays = [0, 1200, 2500, 3800, 5000, 7000];
+  steps.forEach((s, i) => {
+    setTimeout(() => {
+      if (currentPhase !== 'loading') return;
+      setLoadingStep(s, 'active');
+      if (i > 0) setLoadingStep(steps[i-1], 'done');
+    }, delays[i]);
+  });
+}
+
+// ===== デプロイ =====
+async function startDeploy() {
+  const html = document.getElementById('input-html').value.trim();
+  const appName = document.getElementById('input-appname').value.trim();
+
+  if (!html) { alert('HTMLコードを貼り付けてください'); return; }
+  if (!html.includes('<html') && !html.includes('<!DOCTYPE')) {
+    alert('HTMLコードが正しくないようです。\n<!DOCTYPE html>から始まるコードを貼り付けてください。');
+    return;
+  }
+
+  goPhase('loading');
+  startLoadingAnimation();
+
+  try {
+    const payload = {
+      html,
+      appName: appName || null,
+    };
+    if (iconBase64) payload.iconBase64 = iconBase64;
+    if (currentRepoName) payload.scriptName = currentRepoName;
+
+    const res = await fetch(WORKER_URL + '/cf-deploy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.message || data.error || 'デプロイに失敗しました');
+
+    currentRepoName = data.script_name;
+    setLoadingStep('ls-url', 'done');
+    await sleep(600);
+
+    const isRedo = !!payload.scriptName;
+    document.getElementById('result-badge').textContent = isRedo ? '🔄 作り直し完了' : '✅ デプロイ完了';
+    document.getElementById('result-name').textContent = appName || extractTitleFromHtml(html) || data.script_name;
+    document.getElementById('result-repo').textContent = data.script_name + '.mugikoha-one.workers.dev';
+    document.getElementById('result-url-text').textContent = data.app_url;
+    document.getElementById('result-open-btn').href = data.app_url;
+    goPhase('result');
+
+  } catch (err) {
+    document.getElementById('error-title').textContent = 'デプロイに失敗しました';
+    document.getElementById('error-msg').textContent = err.message || 'ネットワークエラーが発生しました。';
+    goPhase('error');
+  }
+}
+
+function copyUrl() {
+  const url = document.getElementById('result-url-text').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'コピー済';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function extractTitleFromHtml(html) {
+  const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  return m ? m[1].trim() : null;
+}
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  }).then(()=>{
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
+</script>
+</body>
+</html>
